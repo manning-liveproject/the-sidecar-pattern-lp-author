@@ -1,0 +1,39 @@
+services:
+  client:
+    image: nginx:alpine
+    ports:
+      - 8090:80
+    volumes:
+      - ./client:/usr/share/nginx/html
+
+  sales-tax-rate:
+    image: sales-tax-rate
+    platform: wasi/wasm32
+    build:
+      context: sales_tax_rate
+    ports:
+      - 8001:8001
+    restart: unless-stopped
+    runtime: io.containerd.wasmedge.v1
+
+  order-management:
+    image: order-management
+    platform: wasi/wasm32
+    build:
+      context: order_management
+    ports:
+      - 8003:8003
+    environment:
+      SALES_TAX_RATE_SERVICE: http://sales-tax-rate:8001/find_rate
+      DATABASE_URL: mysql://manning:WasmEdge@db:3306/umet
+      RUST_BACKTRACE: full
+    restart: unless-stopped
+    runtime: io.containerd.wasmedge.v1
+
+  db:
+    image: mariadb:10.9
+    environment:
+      MYSQL_ALLOW_EMPTY_PASSWORD: true
+      MYSQL_USER: manning
+      MYSQL_PASSWORD: WasmEdge
+      MYSQL_DATABASE: umet
