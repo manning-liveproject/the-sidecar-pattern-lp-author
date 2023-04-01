@@ -68,10 +68,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
         }
 
         (&Method::POST, "/create_order") => {
-            let client = dapr::Dapr::new(3503, "http://localhost".to_string());
-            let v = client.get_secret("local-store", "APP_URL:SALES_TAX_RATE_SERVICE").await?;
-            let rate_url = v["APP_URL:SALES_TAX_RATE_SERVICE"].as_str().unwrap();
-            println!("RATE_SERVICE URL is {}", rate_url);
+            let rate_url = "http://127.0.0.1:8001/find_rate";
 
             let mut conn = pool.get_conn().await.unwrap();
             let byte_stream = hyper::body::to_bytes(req).await?;
@@ -159,12 +156,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("App started. Wait for Dapr sidecar to start ...");
     sleep(Duration::from_millis(1500)).await;
 
-    let client = dapr::Dapr::new(3503, "http://localhost".to_string());
-    let v = client.get_secret("local-store", "APP_URL:DATABASE").await?;
-    let db_url = v["APP_URL:DATABASE"].as_str().unwrap();
-    println!("DATABASE URL is {}", db_url);
-
-    let opts = Opts::from_url(db_url).unwrap();
+    let opts = Opts::from_url("mysql://root:root@127.0.0.1:3306/mysql").unwrap();
     let builder = OptsBuilder::from_opts(opts);
     // The connection pool will have a min of 5 and max of 10 connections.
     let constraints = PoolConstraints::new(5, 10).unwrap();
