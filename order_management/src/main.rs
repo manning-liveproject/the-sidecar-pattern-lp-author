@@ -163,8 +163,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let v = client.get_secret("local-store", "APP_URL:DATABASE").await?;
     let db_url = v["APP_URL:DATABASE"].as_str().unwrap();
     println!("DATABASE URL is {}", db_url);
-    let db_url = "mysql://root:pass@127.0.0.1:3306/mysql";
-    println!("DATABASE URL is {}", db_url);
 
     let opts = Opts::from_url(db_url).unwrap();
     let builder = OptsBuilder::from_opts(opts);
