@@ -56,7 +56,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
 
         // Serve some instructions at /
         (&Method::GET, "/") => Ok(Response::new(Body::from(
-            "Try to GET /init such as: `curl localhost:8003/init`",
+            "Try to GET /init such as: `curl http://localhost:8003/init`",
         ))),
 
         (&Method::GET, "/init") => {
