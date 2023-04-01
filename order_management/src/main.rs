@@ -161,8 +161,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let client = dapr::Dapr::new(3503, "http://localhost".to_string());
     let v = client.get_secret("local-store", "APP_URL:DATABASE").await?;
     let db_url = v["APP_URL:DATABASE"].as_str().unwrap();
+    println!("DATABASE URL is {}", db_url);
 
-    let opts = Opts::from_url(&db_url).unwrap();
+    let opts = Opts::from_url(db_url).unwrap();
     let builder = OptsBuilder::from_opts(opts);
     // The connection pool will have a min of 5 and max of 10 connections.
     let constraints = PoolConstraints::new(5, 10).unwrap();

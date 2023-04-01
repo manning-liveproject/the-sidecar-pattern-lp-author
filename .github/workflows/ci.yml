@@ -66,6 +66,8 @@ jobs:
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/sales_tax_rate_lookup.wasm sales_tax_rate_lookup.wasm
         nohup dapr run --app-id rate-service --app-protocol http --app-port 8001 --dapr-http-port 3501 --components-path ../config --log-level debug wasmedge sales_tax_rate_lookup.wasm > server.log 2>&1 &
+        sleep 10
+        cat server.log
 
     - name: order_management
       run: |
@@ -74,6 +76,13 @@ jobs:
         wasmedgec target/wasm32-wasi/release/order_management.wasm order_management.wasm
         nohup dapr run --app-id order-service --app-protocol http --app-port 8003 --dapr-http-port 3503 --components-path ../config --log-level debug wasmedge order_management.wasm > server.log 2>&1 &
         sleep 10
+        cat server.log
+
+    - name: pretest
+      run: |
+        sleep 15
+        curl http://localhost:3503/v1.0/secrets/local-store/APP_URL
+        curl http://localhost:3503/v1.0/secrets/local-store/APP_URL:DATABASE
 
     - name: test
       run: |
