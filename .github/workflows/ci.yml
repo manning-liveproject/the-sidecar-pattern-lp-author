@@ -82,7 +82,7 @@ jobs:
     - name: test
       run: |
         sleep 15
-        resp=$(curl http://localhost:8003/init)
+        resp=$(curl http://localhost:3503/invoke/order-service/method/init)
         echo "$resp"
         if [[ $resp == *"true"* ]]; then
           echo -e "Execution Success!"
@@ -90,7 +90,7 @@ jobs:
           echo -e "Execution Fail!"
           exit 1
         fi
-        resp=$(curl http://localhost:8003/create_order -X POST -d @order.json)
+        resp=$(curl http://localhost:3503/invoke/order-service/method/create_order -X POST -d @order.json)
         echo "$resp"
         if [[ $resp == *"27.15"* ]]; then
           echo -e "Execution Success!"
@@ -98,7 +98,7 @@ jobs:
           echo -e "Execution Fail!"
           exit 1
         fi
-        resp=$(curl http://localhost:8003/orders)
+        resp=$(curl http://localhost:3503/invoke/order-service/method/orders)
         echo "$resp"
         if [[ $resp == *"27.15"* ]]; then
           echo -e "Execution Success!"

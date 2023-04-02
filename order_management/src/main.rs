@@ -7,6 +7,8 @@ use hyper::{Body, Method, Request, Response, StatusCode, Server};
 pub use mysql_async::prelude::*;
 pub use mysql_async::*;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
+use serde_json::Value::Number;
 use tokio::time::{sleep, Duration};
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -69,48 +71,38 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
 
         (&Method::POST, "/create_order") => {
             let client = dapr::Dapr::new(3503, "http://localhost".to_string());
-            let v = client.get_secret("local-store", "APP_URL:SALES_TAX_RATE_SERVICE").await?;
-            let rate_url = v["APP_URL:SALES_TAX_RATE_SERVICE"].as_str().unwrap();
-            println!("RATE_SERVICE URL is {}", rate_url);
 
             let mut conn = pool.get_conn().await.unwrap();
             let byte_stream = hyper::body::to_bytes(req).await?;
             let mut order: Order = serde_json::from_slice(&byte_stream).unwrap();
 
-            let client = reqwest::Client::new();
-            let rate_resp = client.post(&*rate_url)
-                .body(order.shipping_zip.clone())
-                .send()
-                .await?;
-
-            if rate_resp.status().is_success() {
-                let rate = rate_resp.text()
-                    .await?
-                    .parse::<f32>()?;
-                order.total = order.subtotal * (1.0 + rate) + order.shipping_cost;
-                
-                "INSERT INTO orders (product_id, quantity, subtotal, shipping_address, shipping_zip, shipping_cost, total) VALUES (:product_id, :quantity, :subtotal, :shipping_address, :shipping_zip, :shipping_cost, :total)"
-                    .with(params! {
-                        "product_id" => order.product_id,
-                        "quantity" => order.quantity,
-                        "subtotal" => order.subtotal,
-                        "shipping_address" => &order.shipping_address,
-                        "shipping_zip" => &order.shipping_zip,
-                        "shipping_cost" => order.shipping_cost,
-                        "total" => order.total,
-                    })
-                    .ignore(&mut conn)
-                    .await?;
-
-                drop(conn);
-                Ok(response_build(&serde_json::to_string_pretty(&order)?))
-            } else {
-                if rate_resp.status() == StatusCode::NOT_FOUND {
+            let kvs = json!({
+                "zip": &order.shipping_zip
+            });
+            match client.invoke_service("rate-service", "get_rate", kvs).await? {
+                Number(rate) => {
+                    let rate = rate.as_f64().unwrap() as f32;
+                    order.total = order.subtotal * (1.0 + rate) + order.shipping_cost;
+                    "INSERT INTO orders (product_id, quantity, subtotal, shipping_address, shipping_zip, shipping_cost, total) VALUES (:product_id, :quantity, :subtotal, :shipping_address, :shipping_zip, :shipping_cost, :total)"
+                        .with(params! {
+                            "product_id" => order.product_id,
+                            "quantity" => order.quantity,
+                            "subtotal" => order.subtotal,
+                            "shipping_address" => &order.shipping_address,
+                            "shipping_zip" => &order.shipping_zip,
+                            "shipping_cost" => order.shipping_cost,
+                            "total" => order.total,
+                        })
+                        .ignore(&mut conn)
+                        .await?;
+                    drop(conn);
+                    Ok(response_build(&serde_json::to_string_pretty(&order)?))
+                },
+                _ => {
                     Ok(response_build(&String::from("{\"status\":\"error\", \"message\":\"The zip code in the order does not have a corresponding sales tax rate.\"}")))
-                } else {
-                    Ok(response_build(&String::from("{\"status\":\"error\", \"message\":\"There is an unknown error from the sales tax rate lookup service.\"}")))
                 }
             }
+
         }
 
         (&Method::GET, "/orders") => {

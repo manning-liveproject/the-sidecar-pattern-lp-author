@@ -1,9 +1,9 @@
 use std::net::SocketAddr;
 use std::convert::Infallible;
-use std::str;
 use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Method, Request, Response, StatusCode, Server};
+use hyper::{Body, Method, Request, Response, Server};
 use csv::Reader;
+use serde_json::Value;
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
@@ -11,28 +11,28 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, anyhow::Er
     match (req.method(), req.uri().path()) {
         // Serve some instructions at /
         (&Method::GET, "/") => Ok(Response::new(Body::from(
-            "Try POSTing data to /find_rate such as: `curl http://localhost:8001/get_rate -XPOST -d '78701'`",
+            "Try POSTing data to /find_rate such as: `curl http://localhost:8001/get_rate -XPOST -d '{\"zip\":\"78701\"}'`",
         ))),
 
         (&Method::POST, "/find_rate") => {
-            let post_body = hyper::body::to_bytes(req.into_body()).await?;
-            let mut rate = "".to_string();
+            let byte_stream = hyper::body::to_bytes(req).await?;
+            let json: Value = serde_json::from_slice(&byte_stream).unwrap();
+            let zip = json["zip"].as_str().unwrap();
 
+            let mut rate = "".to_string();
             let rates_data: &[u8] = include_bytes!("rates_by_zipcode.csv");
             let mut rdr = Reader::from_reader(rates_data);
             for result in rdr.records() {
                 let record = result?;
                 // dbg!("{:?}", record.clone());
-                if str::from_utf8(&post_body).unwrap().eq(&record[0]) {
+                if zip.eq(&record[0]) {
                     rate = record[1].to_string();
                     break;
                 }
             }
 
             if rate.is_empty() {
-                let mut not_found = Response::default();
-                *not_found.status_mut() = StatusCode::NOT_FOUND;
-                Ok(not_found)
+                Ok(Response::new(Body::from("Not Found")))
             } else {
                 Ok(Response::new(Body::from(rate)))
             }
@@ -40,9 +40,7 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, anyhow::Er
 
         // Return the 404 Not Found for other routes.
         _ => {
-            let mut not_found = Response::default();
-            *not_found.status_mut() = StatusCode::NOT_FOUND;
-            Ok(not_found)
+            Ok(Response::new(Body::from("Not Found")))
         }
     }
 }
