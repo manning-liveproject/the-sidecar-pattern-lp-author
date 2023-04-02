@@ -36,10 +36,10 @@ dapr run --app-id order-service --app-protocol http --app-port 8003 --dapr-http-
 Run the following from another terminal.
 
 ```bash
-$ curl http://localhost:3503/invoke/order-service/method/init
+$ curl http://localhost:3503/v1.0/invoke/order-service/method/init
 {"status":"true"}
 
-$ curl http://localhost:3503/invoke/order-service/method/create_order -X POST -d @order.json
+$ curl http://localhost:3503/v1.0/invoke/order-service/method/create_order -X POST -d @order.json
 {
   "order_id": 0,
   "product_id": 321,
@@ -51,6 +51,6 @@ $ curl http://localhost:3503/invoke/order-service/method/create_order -X POST -d
   "total": 27.15
 }
 
-$ curl http://localhost:3503/invoke/order-service/method/orders
+$ curl http://localhost:3503/v1.0/invoke/order-service/method/orders
 [{"order_id":1,"product_id":321,"quantity":2,"subtotal":20.0,"shipping_address":"123 Main St, Anytown USA","shipping_zip":"78701","shipping_cost":5.5,"total":27.15}]
 ```
