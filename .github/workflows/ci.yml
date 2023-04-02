@@ -66,6 +66,8 @@ jobs:
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/sales_tax_rate_lookup.wasm sales_tax_rate_lookup.wasm
         nohup dapr run --app-id rate-service --app-protocol http --app-port 8001 --dapr-http-port 3501 --components-path ../config --log-level debug wasmedge sales_tax_rate_lookup.wasm > server.log 2>&1 &
+        sleep 10
+        curl http://localhost:3501/v1.0/invoke/rate-service/method/find_rate -X POST -d "{\"zip\": \"78701\"}"
 
     - name: order_management
       run: |
