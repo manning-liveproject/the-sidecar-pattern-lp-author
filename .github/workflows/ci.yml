@@ -75,6 +75,8 @@ jobs:
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/order_management.wasm order_management.wasm
         nohup dapr run --app-id order-service --app-protocol http --app-port 8003 --dapr-http-port 3503 --components-path ../config --log-level debug wasmedge order_management.wasm > server.log 2>&1 &
+        sleep 10
+        curl http://localhost:3503/v1.0/invoke/rate-service/method/find_rate -X POST -d "{\"zip\": \"78701\"}"
 
     # - name: pretest
     # run: |

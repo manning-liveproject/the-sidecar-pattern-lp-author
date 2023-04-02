@@ -80,7 +80,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
                 "zip": &order.shipping_zip
             });
             dbg!(&kvs);
-            match client.invoke_service("rate-service", "get_rate", kvs).await? {
+            match client.invoke_service("rate-service", "find_rate", kvs).await? {
                 Number(rate) => {
                     dbg!(&rate);
                     let rate = rate.as_f64().unwrap() as f32;
