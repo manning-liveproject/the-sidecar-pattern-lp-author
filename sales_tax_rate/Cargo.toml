@@ -9,3 +9,4 @@ hyper_wasi = { version = "0.15", features = ["full"]}
 tokio_wasi = { version = "1.21", features = ["rt", "macros", "net", "time", "io-util"]}
 csv = "1.1"
 serde_json = "1.0"
+dapr_sdk_wasi = { git = "https://github.com/second-state/dapr-sdk-wasi" }
