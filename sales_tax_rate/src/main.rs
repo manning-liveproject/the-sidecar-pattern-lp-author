@@ -6,6 +6,7 @@ use csv::Reader;
 use serde_json::Value;
 use serde_json::json;
 use serde_json::Value::String;
+use tokio::time::{sleep, Duration};
 
 /// This is our service handler. It receives a Request, routes on its
 /// path, and returns a Future of a Response.
@@ -43,6 +44,9 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, anyhow::Er
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    println!("App started. Wait for Dapr sidecar to start ...");
+    sleep(Duration::from_millis(1500)).await;
+
     // Save the sales tax rate for zip code into the Dapr state store.
     let client = dapr::Dapr::new(3501, "http://localhost".to_string());
     let rates_data: &[u8] = include_bytes!("rates_by_zipcode.csv");
