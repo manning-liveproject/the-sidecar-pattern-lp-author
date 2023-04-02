@@ -79,8 +79,10 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
             let kvs = json!({
                 "zip": &order.shipping_zip
             });
+            dbg!(&kvs);
             match client.invoke_service("rate-service", "get_rate", kvs).await? {
                 Number(rate) => {
+                    dbg!(&rate);
                     let rate = rate.as_f64().unwrap() as f32;
                     order.total = order.subtotal * (1.0 + rate) + order.shipping_cost;
                     "INSERT INTO orders (product_id, quantity, subtotal, shipping_address, shipping_zip, shipping_cost, total) VALUES (:product_id, :quantity, :subtotal, :shipping_address, :shipping_zip, :shipping_cost, :total)"
@@ -99,6 +101,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
                     Ok(response_build(&serde_json::to_string_pretty(&order)?))
                 },
                 _ => {
+                    dbg!("Returns an error");
                     Ok(response_build(&String::from("{\"status\":\"error\", \"message\":\"The zip code in the order does not have a corresponding sales tax rate.\"}")))
                 }
             }

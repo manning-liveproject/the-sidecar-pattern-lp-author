@@ -18,7 +18,6 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, anyhow::Er
             let byte_stream = hyper::body::to_bytes(req).await?;
             let json: Value = serde_json::from_slice(&byte_stream).unwrap();
             let zip = json["zip"].as_str().unwrap();
-            dbg!(zip);
 
             let mut rate = "".to_string();
             let rates_data: &[u8] = include_bytes!("rates_by_zipcode.csv");
@@ -31,7 +30,6 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, anyhow::Er
                     break;
                 }
             }
-            dbg!(&rate);
 
             if rate.is_empty() {
                 Ok(Response::new(Body::from("Not Found")))
