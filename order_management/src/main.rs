@@ -70,7 +70,7 @@ async fn handle_request(req: Request<Body>, pool: Pool) -> Result<Response<Body>
         }
 
         (&Method::POST, "/create_order") => {
-            let client = dapr::Dapr::new(3503, "http://localhost".to_string());
+            let client = dapr::Dapr::new(3503);
 
             let mut conn = pool.get_conn().await.unwrap();
             let byte_stream = hyper::body::to_bytes(req).await?;
@@ -154,7 +154,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("App started. Wait for Dapr sidecar to start ...");
     sleep(Duration::from_millis(1500)).await;
 
-    let client = dapr::Dapr::new(3503, "http://localhost".to_string());
+    let client = dapr::Dapr::new(3503);
     let v = client.get_secret("local-store", "APP_URL:DATABASE").await?;
     let db_url = v["APP_URL:DATABASE"].as_str().unwrap();
     println!("DATABASE URL is {}", db_url);

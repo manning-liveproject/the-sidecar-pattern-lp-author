@@ -22,7 +22,7 @@ async fn handle_request(req: Request<Body>) -> Result<Response<Body>, anyhow::Er
             let json: Value = serde_json::from_slice(&byte_stream).unwrap();
             let zip = json["zip"].as_str().unwrap();
 
-            let client = dapr::Dapr::new(3501, "http://localhost".to_string());
+            let client = dapr::Dapr::new(3501);
             match client.get_state("statestore", zip).await? {
                 String(rate) => {
                     dbg!(&rate);
@@ -48,7 +48,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     sleep(Duration::from_millis(1500)).await;
 
     // Save the sales tax rate for zip code into the Dapr state store.
-    let client = dapr::Dapr::new(3501, "http://localhost".to_string());
+    let client = dapr::Dapr::new(3501);
     let rates_data: &[u8] = include_bytes!("rates_by_zipcode.csv");
     let mut rdr = Reader::from_reader(rates_data);
     for result in rdr.records() {
