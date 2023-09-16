@@ -45,7 +45,7 @@ jobs:
         
     - name: Install WasmEdge
       run: |
-        VERSION=0.12.1
+        VERSION=0.13.4
         curl -sSf https://raw.githubusercontent.com/WasmEdge/WasmEdge/master/utils/install.sh | sudo bash -s -- -e all --version=$VERSION -p /usr/local
     
     - name: Install and init dapr
@@ -65,14 +65,14 @@ jobs:
         cd sales_tax_rate
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/sales_tax_rate_lookup.wasm sales_tax_rate_lookup.wasm
-        nohup dapr run --app-id rate-service --app-protocol http --app-port 8001 --dapr-http-port 3501 --components-path ../config --log-level debug wasmedge sales_tax_rate_lookup.wasm > server.log 2>&1 &
+        nohup dapr run --app-id rate-service --app-protocol http --app-port 8001 --dapr-http-port 3501 --resources-path ../config --log-level debug wasmedge sales_tax_rate_lookup.wasm > server.log 2>&1 &
 
     - name: order_management
       run: |
         cd order_management
         cargo build --target wasm32-wasi --release
         wasmedgec target/wasm32-wasi/release/order_management.wasm order_management.wasm
-        nohup dapr run --app-id order-service --app-protocol http --app-port 8003 --dapr-http-port 3503 --components-path ../config --log-level debug wasmedge order_management.wasm > server.log 2>&1 &
+        nohup dapr run --app-id order-service --app-protocol http --app-port 8003 --dapr-http-port 3503 --resources-path ../config --log-level debug wasmedge order_management.wasm > server.log 2>&1 &
 
     # - name: pretest
     # run: |
